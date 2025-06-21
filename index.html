@@ -1,40 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ESP32 Air Quality Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/canvas-gauges/gauge.min.js"></script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: sans-serif;
-      text-align: center;
-      background-color: #f9f9f9;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       margin: 0;
-      padding: 30px;
-    }
-    h1 {
-      margin-bottom: 40px;
-      color: #333;
-    }
-    .gauge-row {
+      padding: 40px 20px;
+      color: #f0f0f0;
+      min-height: 100vh;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      gap: 60px;
-      flex-wrap: wrap;
     }
+
+    h1 {
+      font-weight: 600;
+      font-size: 2.8rem;
+      margin-bottom: 40px;
+      text-shadow: 0 3px 8px rgba(0,0,0,0.3);
+    }
+
+    .gauge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 30px;
+      width: 100%;
+      max-width: 1200px;
+    }
+
     .gauge-box {
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      padding: 20px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 30px 20px 40px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: default;
     }
+
+    .gauge-box:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+    }
+
     .gauge-box canvas {
-      display: block;
-      margin: auto;
+      width: 180px !important;
+      height: 120px !important;
+      margin-bottom: 15px;
+      filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
     }
-    p {
-      margin-top: 40px;
-      color: #666;
+
+    .gauge-label {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: #eee;
+      letter-spacing: 0.02em;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    p.footer {
+      margin-top: 50px;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 300;
+      font-size: 1rem;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 30px 10px;
+      }
+      .gauge-box {
+        padding: 25px 15px 30px;
+      }
+      .gauge-box canvas {
+        width: 140px !important;
+        height: 95px !important;
+      }
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 30px;
+      }
     }
   </style>
 </head>
@@ -42,56 +102,45 @@
 
   <h1>ESP32 Air Quality Dashboard</h1>
 
-  <div class="gauge-row">
+  <div class="gauge-grid">
     <div class="gauge-box">
-      <canvas id="pm25Gauge" width="250" height="250"></canvas>
+      <canvas id="pm1Gauge" width="200" height="120"></canvas>
+      <div class="gauge-label">PM 1.0 (µg/m³)</div>
     </div>
     <div class="gauge-box">
-      <canvas id="tempGauge" width="250" height="250"></canvas>
+      <canvas id="pm25Gauge" width="200" height="120"></canvas>
+      <div class="gauge-label">PM 2.5 (µg/m³)</div>
     </div>
     <div class="gauge-box">
-      <canvas id="humGauge" width="250" height="250"></canvas>
+      <canvas id="pm4Gauge" width="200" height="120"></canvas>
+      <div class="gauge-label">PM 4.0 (µg/m³)</div>
+    </div>
+    <div class="gauge-box">
+      <canvas id="pm10Gauge" width="200" height="120"></canvas>
+      <div class="gauge-label">PM 10 (µg/m³)</div>
+    </div>
+    <div class="gauge-box">
+      <canvas id="tempGauge" width="200" height="120"></canvas>
+      <div class="gauge-label">Temperature (°C)</div>
+    </div>
+    <div class="gauge-box">
+      <canvas id="humGauge" width="200" height="120"></canvas>
+      <div class="gauge-label">Humidity (%)</div>
     </div>
   </div>
 
-  <p>Data updates every 10 seconds from Google Sheets</p>
+  <p class="footer">Live data from Google Sheets (auto refresh every 10 seconds)</p>
 
   <script>
-    const pm25 = new RadialGauge({
-      renderTo: 'pm25Gauge',
-      title: "PM 2.5",
-      units: "µg/m³",
-      minValue: 0,
-      maxValue: 250,
-      majorTicks: ["0", "50", "100", "150", "200", "250"],
-      value: 0,
-      colorPlate: "#f5f5f5"
-    }).draw();
-
-    const temp = new RadialGauge({
-      renderTo: 'tempGauge',
-      title: "Temperature",
-      units: "°C",
-      minValue: 0,
-      maxValue: 50,
-      majorTicks: ["0", "10", "20", "30", "40", "50"],
-      value: 0,
-      colorPlate: "#f5f5f5"
-    }).draw();
-
-    const hum = new RadialGauge({
-      renderTo: 'humGauge',
-      title: "Humidity",
-      units: "%",
-      minValue: 0,
-      maxValue: 100,
-      majorTicks: ["0", "20", "40", "60", "80", "100"],
-      value: 0,
-      colorPlate: "#f5f5f5"
-    }).draw();
+    const pm1 = new DigitalGauge({ renderTo: 'pm1Gauge', value: 0 }).draw();
+    const pm25 = new DigitalGauge({ renderTo: 'pm25Gauge', value: 0 }).draw();
+    const pm4 = new DigitalGauge({ renderTo: 'pm4Gauge', value: 0 }).draw();
+    const pm10 = new DigitalGauge({ renderTo: 'pm10Gauge', value: 0 }).draw();
+    const temp = new DigitalGauge({ renderTo: 'tempGauge', value: 0 }).draw();
+    const hum = new DigitalGauge({ renderTo: 'humGauge', value: 0 }).draw();
 
     async function fetchData() {
-      const sheetID = "1GDch9NryN2XCKo6uiweClDAhdceNHDq4tqE2yf7hwbs";  // <-- your sheet ID
+      const sheetID = "1GDch9NryN2XCKo6uiweClDAhdceNHDq4tqE2yf7hwbs";  // Replace if changed
       const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=Sheet1`;
 
       try {
@@ -102,20 +151,20 @@
         const rows = json.table.rows;
         const latest = rows[rows.length - 1].c;
 
-        const pm25Val = parseFloat(latest[1].v); // adjust index if column order changes
-        const tempVal = parseFloat(latest[4].v);
-        const humVal = parseFloat(latest[5].v);
+        pm1.value = parseFloat(latest[0].v);
+        pm25.value = parseFloat(latest[1].v);
+        pm4.value = parseFloat(latest[2].v);
+        pm10.value = parseFloat(latest[3].v);
+        temp.value = parseFloat(latest[4].v);
+        hum.value = parseFloat(latest[5].v);
 
-        pm25.value = pm25Val;
-        temp.value = tempVal;
-        hum.value = humVal;
       } catch (err) {
         console.error("Fetch error:", err);
       }
     }
 
-    setInterval(fetchData, 10000); // every 10 seconds
-    fetchData(); // initial call
+    fetchData();
+    setInterval(fetchData, 10000);
   </script>
 
 </body>
