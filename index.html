@@ -4,20 +4,57 @@
   <title>ESP32 Air Quality Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/canvas-gauges/gauge.min.js"></script>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 20px; background: #f2f2f2; }
-    .gauge-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 30px; }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 30px;
+    }
+    h1 {
+      margin-bottom: 40px;
+      color: #333;
+    }
+    .gauge-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 60px;
+      flex-wrap: wrap;
+    }
+    .gauge-box {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    .gauge-box canvas {
+      display: block;
+      margin: auto;
+    }
+    p {
+      margin-top: 40px;
+      color: #666;
+    }
   </style>
 </head>
 <body>
+
   <h1>ESP32 Air Quality Dashboard</h1>
 
-  <div class="gauge-container">
-    <canvas id="pm25Gauge" width="200" height="200"></canvas>
-    <canvas id="tempGauge" width="200" height="200"></canvas>
-    <canvas id="humGauge" width="200" height="200"></canvas>
+  <div class="gauge-row">
+    <div class="gauge-box">
+      <canvas id="pm25Gauge" width="250" height="250"></canvas>
+    </div>
+    <div class="gauge-box">
+      <canvas id="tempGauge" width="250" height="250"></canvas>
+    </div>
+    <div class="gauge-box">
+      <canvas id="humGauge" width="250" height="250"></canvas>
+    </div>
   </div>
 
-  <p>Fetching data from Google Sheet every 10s...</p>
+  <p>Data updates every 10 seconds from Google Sheets</p>
 
   <script>
     const pm25 = new RadialGauge({
@@ -27,7 +64,8 @@
       minValue: 0,
       maxValue: 250,
       majorTicks: ["0", "50", "100", "150", "200", "250"],
-      value: 0
+      value: 0,
+      colorPlate: "#f5f5f5"
     }).draw();
 
     const temp = new RadialGauge({
@@ -37,7 +75,8 @@
       minValue: 0,
       maxValue: 50,
       majorTicks: ["0", "10", "20", "30", "40", "50"],
-      value: 0
+      value: 0,
+      colorPlate: "#f5f5f5"
     }).draw();
 
     const hum = new RadialGauge({
@@ -47,12 +86,12 @@
       minValue: 0,
       maxValue: 100,
       majorTicks: ["0", "20", "40", "60", "80", "100"],
-      value: 0
+      value: 0,
+      colorPlate: "#f5f5f5"
     }).draw();
 
     async function fetchData() {
-      const sheetID = "1GDch9NryN2XCKo6uiweClDAhdceNHDq4tqE2yf7hwbs";
-      const sheetGID = "0"; // usually 0 unless it's another tab
+      const sheetID = "1GDch9NryN2XCKo6uiweClDAhdceNHDq4tqE2yf7hwbs";  // <-- your sheet ID
       const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=Sheet1`;
 
       try {
@@ -63,7 +102,7 @@
         const rows = json.table.rows;
         const latest = rows[rows.length - 1].c;
 
-        const pm25Val = parseFloat(latest[1].v);
+        const pm25Val = parseFloat(latest[1].v); // adjust index if column order changes
         const tempVal = parseFloat(latest[4].v);
         const humVal = parseFloat(latest[5].v);
 
@@ -75,8 +114,9 @@
       }
     }
 
-    setInterval(fetchData, 10000); // update every 10 sec
+    setInterval(fetchData, 10000); // every 10 seconds
     fetchData(); // initial call
   </script>
+
 </body>
 </html>
