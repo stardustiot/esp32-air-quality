@@ -1,110 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ESP32 Air Quality Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-gauges/gauge.min.js"></script>
+  <title>ESP32 Air Quality Monitor</title>
+  <meta http-equiv="refresh" content="60">
   <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      background-color: #f0f4f8;
-      margin: 0;
-      padding: 30px;
-    }
-    h1 {
-      margin-bottom: 40px;
-      color: #222;
-    }
-    .gauge-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 30px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .gauge-box {
-      background: #ffffff;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    .gauge-box canvas {
-      margin: 0 auto;
-    }
-    p {
-      margin-top: 40px;
-      color: #666;
-    }
+    body { font-family: Arial; text-align: center; margin-top: 40px; }
+    table { margin: auto; border-collapse: collapse; }
+    td, th { padding: 10px; border: 1px solid #999; }
   </style>
 </head>
 <body>
-
-  <h1>ESP32 Air Quality Dashboard</h1>
-
-  <div class="gauge-grid">
-    <div class="gauge-box">
-      <canvas id="pm1Gauge" width="200" height="100"></canvas>
-      <div>PM 1.0 (µg/m³)</div>
-    </div>
-    <div class="gauge-box">
-      <canvas id="pm25Gauge" width="200" height="100"></canvas>
-      <div>PM 2.5 (µg/m³)</div>
-    </div>
-    <div class="gauge-box">
-      <canvas id="pm4Gauge" width="200" height="100"></canvas>
-      <div>PM 4.0 (µg/m³)</div>
-    </div>
-    <div class="gauge-box">
-      <canvas id="pm10Gauge" width="200" height="100"></canvas>
-      <div>PM 10 (µg/m³)</div>
-    </div>
-    <div class="gauge-box">
-      <canvas id="tempGauge" width="200" height="100"></canvas>
-      <div>Temperature (°C)</div>
-    </div>
-    <div class="gauge-box">
-      <canvas id="humGauge" width="200" height="100"></canvas>
-      <div>Humidity (%)</div>
-    </div>
-  </div>
-
-  <p>Live data from Google Sheets (auto refresh every 10 seconds)</p>
-
-  <script>
-    const pm1 = new DigitalGauge({ renderTo: 'pm1Gauge', value: 0 }).draw();
-    const pm25 = new DigitalGauge({ renderTo: 'pm25Gauge', value: 0 }).draw();
-    const pm4 = new DigitalGauge({ renderTo: 'pm4Gauge', value: 0 }).draw();
-    const pm10 = new DigitalGauge({ renderTo: 'pm10Gauge', value: 0 }).draw();
-    const temp = new DigitalGauge({ renderTo: 'tempGauge', value: 0 }).draw();
-    const hum = new DigitalGauge({ renderTo: 'humGauge', value: 0 }).draw();
-
-    async function fetchData() {
-      const sheetID = "1GDch9NryN2XCKo6uiweClDAhdceNHDq4tqE2yf7hwbs";  // Replace if changed
-      const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=Sheet1`;
-
-      try {
-        const res = await fetch(url);
-        const text = await res.text();
-        const json = JSON.parse(text.substr(47).slice(0, -2));
-
-        const rows = json.table.rows;
-        const latest = rows[rows.length - 1].c;
-
-        pm1.value = parseFloat(latest[0].v);    // PM 1.0
-        pm25.value = parseFloat(latest[1].v);   // PM 2.5
-        pm4.value = parseFloat(latest[2].v);    // PM 4.0
-        pm10.value = parseFloat(latest[3].v);   // PM 10.0
-        temp.value = parseFloat(latest[4].v);   // Temperature
-        hum.value = parseFloat(latest[5].v);    // Humidity
-
-      } catch (err) {
-        console.error("Fetch error:", err);
-      }
-    }
-
-    fetchData();
-    setInterval(fetchData, 10000); // update every 10 seconds
-  </script>
-
+  <h1>ESP32 Air Quality Data</h1>
+  <iframe src="https://docs.google.com/spreadsheets/d/1GDch9NryN2XCKo6uiweClDAhdceNHDq4tqE2yf7hwbs/edit?usp=sharing" 
+          width="100%" height="400"></iframe>
+  <p>Auto-refresh every 60 seconds</p>
 </body>
 </html>
